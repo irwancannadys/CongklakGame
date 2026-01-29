@@ -72,11 +72,6 @@ class GameViewModel: ObservableObject {
     
     /// Start a new game
     func startNewGame() {
-        
-        print("\n🎮 ========================================")
-        print("🎮 NEW GAME STARTED")
-        print("🎮 ========================================\n")
-        
         gameEngine.startNewGame()
         updateState()
         gameStatus = .inProgress
@@ -86,48 +81,23 @@ class GameViewModel: ObservableObject {
     /// Handle pit selection by user
     /// - Parameter index: Index of the selected pit
     func selectPit(at index: Int) {
-        print("\n========================================")
-        print("🎮 PLAYER ACTION: Tap pit at index \(index)")
-        
         // Don't allow moves if game is not in progress
         guard gameStatus == .inProgress else {
             statusMessage = "Please start a new game"
-            print("❌ Game not in progress")
-            print("========================================\n")
             return
         }
         
         // Check if pit can be selected
         guard gameEngine.canSelectPit(at: index) else {
             statusMessage = "Invalid selection. Choose a pit with stones that you own."
-            print("❌ Invalid pit selection")
-            print("   - Current player: \(currentPlayer.displayName)")
-            print("   - Pit owner: \(gameBoard[index].owner.displayName)")
-            print("   - Pit stones: \(gameBoard[index].stoneCount)")
-            print("   - Is store: \(gameBoard[index].isStore)")
-            print("========================================\n")
             return
         }
-        
-        let stonesBefore = gameBoard[index].stoneCount
-        print("✅ Valid selection")
-        print("   - Player: \(currentPlayer.displayName)")
-        print("   - Pit index: \(index)")
-        print("   - Stones to distribute: \(stonesBefore)")
         
         // Perform the move
         guard let result = gameEngine.performMove(from: index) else {
             statusMessage = "Move failed. Please try again."
-            print("❌ Move execution failed")
-            print("========================================\n")
             return
         }
-        
-        print("\n📊 MOVE RESULT:")
-        print("   - Affected pits: \(result.affectedIndices)")
-        print("   - Last stone at: \(result.lastStoneIndex)")
-        print("   - Extra turn: \(result.extraTurn ? "YES ✨" : "NO")")
-        print("   - Capture occurred: \(result.captureOccurred ? "YES 🎯" : "NO")")
         if result.captureOccurred {
             print("   - Captured stones: \(result.capturedStones)")
         }
@@ -141,21 +111,13 @@ class GameViewModel: ObservableObject {
         // Update state
         updateState()
         
-        print("\n📋 BOARD STATE:")
-        print("   Player 1 Store: \(score(for: .one))")
-        print("   Player 2 Store: \(score(for: .two))")
-        print("   Next player: \(currentPlayer.displayName)")
-        
         // Update status message
         updateStatusMessage(for: result)
         
         // Check if game ended
         if gameEngine.checkGameEnd() {
-            print("\n🏁 GAME ENDED!")
             handleGameEnd()
         }
-        
-        print("========================================\n")
         
         // Clear animations after delay
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in

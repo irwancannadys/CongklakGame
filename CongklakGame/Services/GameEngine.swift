@@ -46,10 +46,10 @@ class GameEngine: GameEngineProtocol {
     // MARK: - Properties
     
     /// Current state of the game board
-    private(set) var currentBoard: GameBoard
+    var currentBoard: GameBoard
     
     /// Current player's turn
-    private(set) var currentPlayer: Player
+    var currentPlayer: Player
     
     // MARK: - Initialization
     
@@ -84,7 +84,7 @@ class GameEngine: GameEngineProtocol {
         guard canSelectPit(at: index) else {
             return nil
         }
-        print("   🔄 Distributing stones...")
+        
         // Get stones from selected pit
         var stones = currentBoard[index].stoneCount
         currentBoard[index].stoneCount = 0
@@ -245,6 +245,18 @@ class GameEngine: GameEngineProtocol {
             }
         }
     }
+    
+#if DEBUG
+  /// For testing purposes only - allows direct board manipulation
+  func setBoard(_ board: GameBoard) {
+      self.currentBoard = board
+  }
+  
+  /// For testing purposes only - allows direct player setting
+  func setCurrentPlayer(_ player: Player) {
+      self.currentPlayer = player
+  }
+  #endif
 }
 
 // MARK: - CustomStringConvertible

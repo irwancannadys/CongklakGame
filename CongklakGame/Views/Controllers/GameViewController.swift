@@ -159,7 +159,7 @@ class GameViewController: UIViewController {
         // Observe animating pit indices
         viewModel.$animatingPitIndices
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] indices in
+            .sink { _ in
                 // Animations handled by PitView
             }
             .store(in: &cancellables)
@@ -231,7 +231,8 @@ class GameViewController: UIViewController {
         
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         alert.addAction(UIAlertAction(title: "Restart", style: .destructive) { [weak self] _ in
-            self?.viewModel.resetGame()
+            guard let self = self else { return }
+            self.viewModel.resetGame()
         })
         
         present(alert, animated: true)
