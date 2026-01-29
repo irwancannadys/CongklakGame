@@ -88,39 +88,25 @@ class GameViewModel: ObservableObject {
     /// Handle pit selection by user
     /// - Parameter index: Index of the selected pit
     func selectPit(at index: Int) {
-        print("\n========================================")
-        print("🎮 PLAYER ACTION: Tap pit at index \(index)")
         
         guard gameStatus == .inProgress else {
             statusMessage = "Please start a new game"
-            print("❌ Game not in progress")
-            print("========================================\n")
             return
         }
         
         guard !isAnimating else {
-            print("⏸️ Animation in progress, ignoring tap")
-            print("========================================\n")
             return
         }
         
         guard gameEngine.canSelectPit(at: index) else {
             statusMessage = "Invalid selection. Choose a pit with stones that you own."
-            print("❌ Invalid pit selection")
-            print("========================================\n")
             return
         }
         
         guard let result = gameEngine.performMove(from: index) else {
             statusMessage = "Move failed. Please try again."
-            print("❌ Move failed")
-            print("========================================\n")
             return
         }
-        
-        print("✅ Valid move")
-        print("📊 Affected pits: \(result.affectedIndices)")
-        print("🎯 Starting sequential animation...")
         
         isAnimating = true
         animateStoneDistribution(result: result)
@@ -139,8 +125,6 @@ class GameViewModel: ObservableObject {
                 seenIndices.insert(index)
             }
         }
-        
-        print("🎬 Animation sequence: \(uniqueIndices.count) unique steps")
         
         // Animate each pit sequentially with longer delay
         var delay: TimeInterval = 0
@@ -164,15 +148,14 @@ class GameViewModel: ObservableObject {
                 
                 // If this is the last pit in sequence
                 if stepIndex == uniqueIndices.count - 1 {
-                    print("  ✨ Animation complete!")
                     
                     // Special handling for capture
                     if result.captureOccurred {
-                        print("  🎯 CAPTURE! \(result.capturedStones) stones captured!")
+                        print("CAPTURE! \(result.capturedStones) stones captured!")
                     }
                     
                     if result.extraTurn {
-                        print("  ⭐ EXTRA TURN!")
+                        print("EXTRA TURN!")
                     }
                     
                     // Wait before finalizing
@@ -185,20 +168,16 @@ class GameViewModel: ObservableObject {
                         self.updateState()
                         self.updateStatusMessage(for: result)
                         
-                        print("📋 Final board state updated")
-                        print("   Player: \(self.currentPlayer.displayName)")
-                        print("   Score P1: \(self.score(for: .one)), P2: \(self.score(for: .two))")
+                        print("Player: \(self.currentPlayer.displayName)")
+                        print("Score P1: \(self.score(for: .one)), P2: \(self.score(for: .two))")
                         
                         // Check if game ended
                         if self.gameEngine.checkGameEnd() {
-                            print("🏁 Game ended!")
                             self.handleGameEnd()
                         }
                         
                         self.isAnimating = false
                         self.lastMoveResult = result
-                        
-                        print("========================================\n")
                     }
                 }
             }

@@ -110,7 +110,7 @@ class GameViewController: UIViewController {
         view.addSubview(player1ScoreLabel)
         view.addSubview(player2ScoreLabel)
         view.addSubview(boardView)
-        view.addSubview(currentPlayerLabel) // Will be on top of board
+        view.addSubview(currentPlayerLabel)
         view.addSubview(startButton)
         view.addSubview(restartButton)
         
