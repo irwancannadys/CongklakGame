@@ -27,6 +27,7 @@
 		20B7F7172F2B18EB00A00464 /* CongklakGame.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CongklakGame.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		20B7F72D2F2B18EE00A00464 /* CongklakGameTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CongklakGameTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		20B7F7372F2B18EE00A00464 /* CongklakGameUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CongklakGameUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		20B7F75B2F2B220400A00464 /* CongklakGameTest.playground */ = {isa = PBXFileReference; lastKnownFileType = file.playground; path = CongklakGameTest.playground; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -92,6 +93,7 @@
 				20B7F7302F2B18EE00A00464 /* CongklakGameTests */,
 				20B7F73A2F2B18EE00A00464 /* CongklakGameUITests */,
 				20B7F7182F2B18EB00A00464 /* Products */,
+				20B7F75B2F2B220400A00464 /* CongklakGameTest.playground */,
 			);
 			sourceTree = "<group>";
 		};
