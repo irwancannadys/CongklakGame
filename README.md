@@ -237,7 +237,7 @@ open CongklakGame.xcodeproj
 
 ## 📄 License
 
-Created for educational purposes as part of an iOS Engineer coding challenge.
+Created for educational purposes as part of an iOS Engineer.
 
 ## 👤 Author
 
