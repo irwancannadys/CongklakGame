@@ -576,13 +576,14 @@ final class GameEngineTests: XCTestCase {
         // Given: Perform multiple moves
         
         // When: Execute sequence of moves
-        var result1 = sut.performMove(from: 1)
+        let result1 = sut.performMove(from: 1)
         XCTAssertNotNil(result1)
-        
-        var result2 = sut.performMove(from: 8)
+            
+        let result2 = sut.performMove(from: 8)
         XCTAssertNotNil(result2)
-        
-        var result3 = sut.performMove(from: 2)
+            
+        let result3 = sut.performMove(from: 2)
+        XCTAssertNotNil(result3)
         XCTAssertNotNil(result3)
         
         // Then: Game state should be consistent

@@ -10,6 +10,8 @@ import UIKit
 /// Custom view representing a single pit on the game board
 class PitView: UIView {
     
+    private let hapticGenerator = UIImpactFeedbackGenerator(style: .light)
+    
     // MARK: - Properties
     
     /// Number of stones in this pit
@@ -129,16 +131,19 @@ class PitView: UIView {
     // MARK: - Actions
     
     @objc private func handleTap() {
-        // Tap animation
-        UIView.animate(withDuration: 0.1, animations: {
-            self.transform = CGAffineTransform(scaleX: Constants.Animation.tapScale, y: Constants.Animation.tapScale)
-        }) { _ in
-            UIView.animate(withDuration: 0.1) {
-                self.transform = .identity
-            }
-        }
-        
-        onTap?()
+        // Haptic feedback
+           hapticGenerator.impactOccurred()
+           
+           // Tap animation
+           UIView.animate(withDuration: 0.1, animations: {
+               self.transform = CGAffineTransform(scaleX: Constants.Animation.tapScale, y: Constants.Animation.tapScale)
+           }) { _ in
+               UIView.animate(withDuration: 0.1) {
+                   self.transform = .identity
+               }
+           }
+           
+           onTap?()
     }
     
     // MARK: - Public Methods
@@ -152,16 +157,39 @@ class PitView: UIView {
     
     /// Animate stone count change
     func animateStoneChange(from oldValue: Int, to newValue: Int) {
-        // Fade out old value
+        // Scale up briefly when receiving stone
         UIView.animate(withDuration: 0.15, animations: {
-            self.stoneLabel.alpha = 0
+            self.containerView.transform = CGAffineTransform(scaleX: 1.1, y: 1.1)
+            self.stoneLabel.alpha = 0.5
         }) { _ in
             // Update value
             self.stoneCount = newValue
             
-            // Fade in new value
+            // Scale back and fade in
             UIView.animate(withDuration: 0.15) {
-                self.stoneLabel.alpha = 1
+                self.containerView.transform = .identity
+                self.stoneLabel.alpha = 1.0
+            }
+        }
+    }
+    
+    func pulseAnimation() {
+        // Save original colors
+        let originalBgColor = containerView.backgroundColor
+        
+        // Animate with more visible effect
+        UIView.animate(withDuration: 0.25, animations: {
+            // Bigger scale
+            self.containerView.transform = CGAffineTransform(scaleX: 1.25, y: 1.25)
+            // Brighter color
+            self.containerView.backgroundColor = Constants.Colors.highlight
+            // Bold label
+            self.stoneLabel.transform = CGAffineTransform(scaleX: 1.3, y: 1.3)
+        }) { _ in
+            UIView.animate(withDuration: 0.25) {
+                self.containerView.transform = .identity
+                self.containerView.backgroundColor = originalBgColor
+                self.stoneLabel.transform = .identity
             }
         }
     }

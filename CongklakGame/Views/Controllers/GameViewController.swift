@@ -28,8 +28,9 @@ class GameViewController: UIViewController {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
         label.textAlignment = .center
-        label.font = UIFont.boldSystemFont(ofSize: 20)
+        label.font = UIFont.boldSystemFont(ofSize: 14)
         label.textColor = .black
+        label.numberOfLines = 2
         return label
     }()
     
@@ -37,7 +38,7 @@ class GameViewController: UIViewController {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
         label.textAlignment = .center
-        label.font = UIFont.systemFont(ofSize: 16)
+        label.font = UIFont.systemFont(ofSize: 13) // Smaller
         label.textColor = .darkGray
         label.numberOfLines = 0
         return label
@@ -73,6 +74,7 @@ class GameViewController: UIViewController {
         setupUI()
         setupBindings()
         setupActions()
+        setupAnimationObservers()
     }
     
     // MARK: - Setup
@@ -81,10 +83,34 @@ class GameViewController: UIViewController {
         title = "Congklak"
         view.backgroundColor = .white
         
+        // Score labels
+        let player1ScoreLabel = UILabel()
+        player1ScoreLabel.translatesAutoresizingMaskIntoConstraints = false
+        player1ScoreLabel.textAlignment = .left
+        player1ScoreLabel.font = UIFont.boldSystemFont(ofSize: 16)
+        player1ScoreLabel.textColor = .systemBlue
+        player1ScoreLabel.text = "P1: 0"
+        
+        let player2ScoreLabel = UILabel()
+        player2ScoreLabel.translatesAutoresizingMaskIntoConstraints = false
+        player2ScoreLabel.textAlignment = .left
+        player2ScoreLabel.font = UIFont.boldSystemFont(ofSize: 16)
+        player2ScoreLabel.textColor = .systemRed
+        player2ScoreLabel.text = "P2: 0"
+        
+        // Update current player label for center display
+        currentPlayerLabel.font = UIFont.boldSystemFont(ofSize: 14)
+        currentPlayerLabel.numberOfLines = 2
+        
+        // Update button styles
+        startButton.titleLabel?.font = UIFont.boldSystemFont(ofSize: 14)
+        restartButton.titleLabel?.font = UIFont.boldSystemFont(ofSize: 14)
+        
         // Add subviews
-        view.addSubview(currentPlayerLabel)
-        view.addSubview(statusLabel)
+        view.addSubview(player1ScoreLabel)
+        view.addSubview(player2ScoreLabel)
         view.addSubview(boardView)
+        view.addSubview(currentPlayerLabel) // Will be on top of board
         view.addSubview(startButton)
         view.addSubview(restartButton)
         
@@ -93,34 +119,56 @@ class GameViewController: UIViewController {
         
         // Layout
         NSLayoutConstraint.activate([
-            // Current player label
-            currentPlayerLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
-            currentPlayerLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            currentPlayerLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            // Player 1 score - top left
+            player1ScoreLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 8),
+            player1ScoreLabel.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 16),
             
-            // Status label
-            statusLabel.topAnchor.constraint(equalTo: currentPlayerLabel.bottomAnchor, constant: 8),
-            statusLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            statusLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            // Player 2 score - below P1
+            player2ScoreLabel.topAnchor.constraint(equalTo: player1ScoreLabel.bottomAnchor, constant: 4),
+            player2ScoreLabel.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 16),
             
-            // Board view
-            boardView.topAnchor.constraint(equalTo: statusLabel.bottomAnchor, constant: Constants.Layout.verticalSpacing),
-            boardView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
-            boardView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
-            boardView.heightAnchor.constraint(equalToConstant: 300),
+            // Restart button - top right
+            restartButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 6),
+            restartButton.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -16),
+            restartButton.widthAnchor.constraint(equalToConstant: 80),
+            restartButton.heightAnchor.constraint(equalToConstant: 32),
             
-            // Start button
-            startButton.topAnchor.constraint(equalTo: boardView.bottomAnchor, constant: Constants.Layout.verticalSpacing),
-            startButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 40),
-            startButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -40),
-            startButton.heightAnchor.constraint(equalToConstant: Constants.Layout.buttonHeight),
+            // Start button (same position)
+            startButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 6),
+            startButton.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -16),
+            startButton.widthAnchor.constraint(equalToConstant: 100),
+            startButton.heightAnchor.constraint(equalToConstant: 32),
             
-            // Restart button (same position as start button)
-            restartButton.topAnchor.constraint(equalTo: boardView.bottomAnchor, constant: Constants.Layout.verticalSpacing),
-            restartButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 40),
-            restartButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -40),
-            restartButton.heightAnchor.constraint(equalToConstant: Constants.Layout.buttonHeight)
+            // Board - fills remaining space
+            boardView.topAnchor.constraint(equalTo: player2ScoreLabel.bottomAnchor, constant: 12),
+            boardView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 16),
+            boardView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -16),
+            boardView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -12),
+            
+            // Current player label - CENTERED ON TOP OF BOARD
+            currentPlayerLabel.centerXAnchor.constraint(equalTo: boardView.centerXAnchor),
+            currentPlayerLabel.centerYAnchor.constraint(equalTo: boardView.centerYAnchor),
+            currentPlayerLabel.widthAnchor.constraint(lessThanOrEqualTo: boardView.widthAnchor, multiplier: 0.4)
         ])
+        
+        // Bind scores
+        viewModel.$gameBoard
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                guard let self = self else { return }
+                player1ScoreLabel.text = "P1: \(self.viewModel.score(for: .one))"
+                player2ScoreLabel.text = "P2: \(self.viewModel.score(for: .two))"
+            }
+            .store(in: &cancellables)
+        
+        // Update score label emphasis based on current player
+        viewModel.$currentPlayer
+            .receive(on: DispatchQueue.main)
+            .sink { player in
+                player1ScoreLabel.font = player == .one ? UIFont.boldSystemFont(ofSize: 18) : UIFont.systemFont(ofSize: 16)
+                player2ScoreLabel.font = player == .two ? UIFont.boldSystemFont(ofSize: 18) : UIFont.systemFont(ofSize: 16)
+            }
+            .store(in: &cancellables)
     }
     
     private func setupBindings() {
@@ -159,8 +207,12 @@ class GameViewController: UIViewController {
         // Observe animating pit indices
         viewModel.$animatingPitIndices
             .receive(on: DispatchQueue.main)
-            .sink { _ in
-                // Animations handled by PitView
+            .sink { [weak self] indices in
+                guard let self = self else { return }
+                // Animate pits that are currently active
+                for index in indices {
+                    self.boardView.animatePit(at: index)
+                }
             }
             .store(in: &cancellables)
     }
@@ -263,6 +315,28 @@ class GameViewController: UIViewController {
         })
         
         present(alert, animated: true)
+    }
+    
+    private func setupAnimationObservers() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handlePulsePit(_:)),
+            name: NSNotification.Name("PulsePit"),
+            object: nil
+        )
+    }
+
+    @objc private func handlePulsePit(_ notification: Notification) {
+        guard let userInfo = notification.userInfo,
+              let index = userInfo["index"] as? Int else {
+            return
+        }
+        
+        boardView.animatePit(at: index)
+    }
+
+    deinit {
+        NotificationCenter.default.removeObserver(self)
     }
 }
 

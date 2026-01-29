@@ -7,6 +7,7 @@
 
 import Foundation
 import Combine
+import UIKit
 
 /// Game status enumeration
 enum GameStatus : Equatable {
@@ -36,10 +37,10 @@ class GameViewModel: ObservableObject {
     // MARK: - Published Properties
     
     /// Current game board state
-    @Published private(set) var gameBoard: GameBoard
+    @Published var gameBoard: GameBoard
     
     /// Current player's turn
-    @Published private(set) var currentPlayer: Player
+    @Published var currentPlayer: Player
     
     /// Current game status
     @Published private(set) var gameStatus: GameStatus
@@ -57,6 +58,12 @@ class GameViewModel: ObservableObject {
     
     private let gameEngine: GameEngineProtocol
     private var cancellables = Set<AnyCancellable>()
+    
+    private let lightHaptic = UIImpactFeedbackGenerator(style: .light)
+    private let mediumHaptic = UIImpactFeedbackGenerator(style: .medium)
+    private let successHaptic = UINotificationFeedbackGenerator()
+    
+    private var isAnimating = false
     
     // MARK: - Initialization
     
@@ -81,47 +88,122 @@ class GameViewModel: ObservableObject {
     /// Handle pit selection by user
     /// - Parameter index: Index of the selected pit
     func selectPit(at index: Int) {
-        // Don't allow moves if game is not in progress
+        print("\n========================================")
+        print("🎮 PLAYER ACTION: Tap pit at index \(index)")
+        
         guard gameStatus == .inProgress else {
             statusMessage = "Please start a new game"
+            print("❌ Game not in progress")
+            print("========================================\n")
             return
         }
         
-        // Check if pit can be selected
+        guard !isAnimating else {
+            print("⏸️ Animation in progress, ignoring tap")
+            print("========================================\n")
+            return
+        }
+        
         guard gameEngine.canSelectPit(at: index) else {
             statusMessage = "Invalid selection. Choose a pit with stones that you own."
+            print("❌ Invalid pit selection")
+            print("========================================\n")
             return
         }
         
-        // Perform the move
         guard let result = gameEngine.performMove(from: index) else {
             statusMessage = "Move failed. Please try again."
+            print("❌ Move failed")
+            print("========================================\n")
             return
         }
-        if result.captureOccurred {
-            print("   - Captured stones: \(result.capturedStones)")
+        
+        print("✅ Valid move")
+        print("📊 Affected pits: \(result.affectedIndices)")
+        print("🎯 Starting sequential animation...")
+        
+        isAnimating = true
+        animateStoneDistribution(result: result)
+    }
+    
+    /// Animate stone distribution step by step
+    /// Animate stone distribution step by step
+    private func animateStoneDistribution(result: MoveResult) {
+        // Filter out duplicate indices - only animate unique steps
+        var seenIndices = Set<Int>()
+        var uniqueIndices: [Int] = []
+        
+        for index in result.affectedIndices {
+            if !seenIndices.contains(index) {
+                uniqueIndices.append(index)
+                seenIndices.insert(index)
+            }
         }
         
-        // Store result for animations
-        lastMoveResult = result
+        print("🎬 Animation sequence: \(uniqueIndices.count) unique steps")
         
-        // Update animating indices
-        animatingPitIndices = Set(result.affectedIndices)
+        // Animate each pit sequentially with longer delay
+        var delay: TimeInterval = 0
+        let animationInterval: TimeInterval = 0.3 // 300ms per pit
         
-        // Update state
-        updateState()
-        
-        // Update status message
-        updateStatusMessage(for: result)
-        
-        // Check if game ended
-        if gameEngine.checkGameEnd() {
-            handleGameEnd()
-        }
-        
-        // Clear animations after delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-            self?.animatingPitIndices.removeAll()
+        for (stepIndex, pitIndex) in uniqueIndices.enumerated() {
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
+                guard let self = self else { return }
+                
+                print("  Step \(stepIndex + 1)/\(uniqueIndices.count): Pit \(pitIndex) receiving stone")
+                
+                // Highlight current pit being filled
+                self.animatingPitIndices = [pitIndex]
+                
+                // Trigger pulse animation
+                NotificationCenter.default.post(
+                    name: NSNotification.Name("PulsePit"),
+                    object: nil,
+                    userInfo: ["index": pitIndex]
+                )
+                
+                // If this is the last pit in sequence
+                if stepIndex == uniqueIndices.count - 1 {
+                    print("  ✨ Animation complete!")
+                    
+                    // Special handling for capture
+                    if result.captureOccurred {
+                        print("  🎯 CAPTURE! \(result.capturedStones) stones captured!")
+                    }
+                    
+                    if result.extraTurn {
+                        print("  ⭐ EXTRA TURN!")
+                    }
+                    
+                    // Wait before finalizing
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                        guard let self = self else { return }
+                        
+                        self.animatingPitIndices.removeAll()
+                        
+                        // Now set the final board state from engine (includes capture)
+                        self.updateState()
+                        self.updateStatusMessage(for: result)
+                        
+                        print("📋 Final board state updated")
+                        print("   Player: \(self.currentPlayer.displayName)")
+                        print("   Score P1: \(self.score(for: .one)), P2: \(self.score(for: .two))")
+                        
+                        // Check if game ended
+                        if self.gameEngine.checkGameEnd() {
+                            print("🏁 Game ended!")
+                            self.handleGameEnd()
+                        }
+                        
+                        self.isAnimating = false
+                        self.lastMoveResult = result
+                        
+                        print("========================================\n")
+                    }
+                }
+            }
+            
+            delay += animationInterval
         }
     }
     
@@ -175,12 +257,18 @@ class GameViewModel: ObservableObject {
         
         if result.captureOccurred {
             messages.append("Captured \(result.capturedStones) stones!")
+            // Medium haptic for capture
+            mediumHaptic.impactOccurred()
         }
         
         if result.extraTurn {
             messages.append("\(currentPlayer.displayName) gets an extra turn!")
+            // Success haptic for extra turn
+            successHaptic.notificationOccurred(.success)
         } else {
             messages.append("\(currentPlayer.displayName)'s turn")
+            // Light haptic for regular turn
+            lightHaptic.impactOccurred()
         }
         
         statusMessage = messages.joined(separator: " ")

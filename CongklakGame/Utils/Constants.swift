@@ -37,31 +37,31 @@ enum Constants {
     // MARK: - Sizes
     enum Sizes {
         /// Width and height for small pits
-        static let pitSize: CGFloat = 60
+        static let pitSize: CGFloat = 50 // Slightly bigger
         
         /// Width for stores
-        static let storeWidth: CGFloat = 70
+        static let storeWidth: CGFloat = 60
         
         /// Height for stores
-        static let storeHeight: CGFloat = 200
+        static let storeHeight: CGFloat = 200 // Back to taller
         
         /// Spacing between pits
-        static let spacing: CGFloat = 8
+        static let spacing: CGFloat = 6
         
         /// Corner radius for pits
-        static let cornerRadius: CGFloat = 30
+        static let cornerRadius: CGFloat = 25
         
         /// Corner radius for stores
-        static let storeCornerRadius: CGFloat = 15
+        static let storeCornerRadius: CGFloat = 12
         
         /// Border width for highlighted pits
         static let highlightBorderWidth: CGFloat = 3
         
         /// Font size for stone count
-        static let stoneFontSize: CGFloat = 20
+        static let stoneFontSize: CGFloat = 18
         
         /// Font size for store count
-        static let storeFontSize: CGFloat = 24
+        static let storeFontSize: CGFloat = 22
     }
     
     // MARK: - Animation

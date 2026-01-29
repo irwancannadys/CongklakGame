@@ -167,4 +167,26 @@ class GameBoardView: UIView {
         guard index < pitViews.count else { return }
         pitViews[index].animateStoneChange(from: oldValue, to: newValue)
     }
+    
+    func animatePit(at index: Int) {
+        guard index < pitViews.count else { return }
+        pitViews[index].pulseAnimation()
+    }
+    
+    /// Update board and trigger animations for changed pits
+    func updateBoardAnimated(with gameBoard: GameBoard, changedIndices: [Int]) {
+        // Update all pits
+        for (index, pitView) in pitViews.enumerated() {
+            let pit = gameBoard[index]
+            let oldCount = pitView.stoneCount
+            let newCount = pit.stoneCount
+            
+            // If this pit changed and is in the changed indices
+            if changedIndices.contains(index) && oldCount != newCount {
+                pitView.animateStoneChange(from: oldCount, to: newCount)
+            } else {
+                pitView.configure(stones: pit.stoneCount, isStore: pit.isStore, highlighted: false)
+            }
+        }
+    }
 }
